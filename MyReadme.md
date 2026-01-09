@@ -36,7 +36,8 @@ repository
 usecase
 ├── RegisterSaleUseCase
 ├── GetSoldQuantityUseCase
-└── GetProductRevenueUseCase
+├── GetProductRevenueUseCase
+└── GetTotalRevenueUseCase
 ```
 
 ### Tests
@@ -63,6 +64,13 @@ Agregué `GetProductRevenueUseCase`: dados un `SupermarketId` y `ProductId`, ret
 - Valida que el producto exista
 - Delega a `supermarket.revenueOf(productId)`
 
+## Commit 5: Caso de Uso - Obtener Ingresos Totales
+
+Agregué `GetTotalRevenueUseCase`: dado un `SupermarketId`, retorna los ingresos totales de ese supermercado.
+
+- Valida que el supermercado exista
+- Delega a `supermarket.totalRevenue()`
+
 ## 📦 Estructura
 
 ```
@@ -78,11 +86,11 @@ domain
 │   ├── ProductNotFoundException
 │   └── SupermarketNotFoundException
 └── valueobject
-    ├── ProductId
-    ├── SupermarketId
-    ├── SaleId
-    ├── Quantity
-    └── Amount
+├── ProductId
+├── SupermarketId
+├── SaleId
+├── Quantity
+└── Amount
 ```
 
 ## 🧩 Entidades
