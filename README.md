@@ -1,78 +1,136 @@
-# Nexup Backend Challenge
+## Nexup Backend Challenge
 
-En este repositorio, se encuentra la prueba técnica para el puesto de Backend Developer en Nexup.
+El enunciado original está en [`CHALLENGE.md`](CHALLENGE.md). Este documento explica mis decisiones de diseño.
 
-Este challenge está diseñado para evaluar tus habilidades de Kotlin y resolución de problemas.
+---
 
-## Problema a resolver
+## 📦 Estructura del Proyecto
 
-Crear las clases y funciones necesarias para resolver el siguiente problema:
-- Se tiene una **cadena de supermercados**
-- Se tienen **productos**, cada uno con un ID único, nombre y precio
-- Se tienen **supermercados**, cada uno con un ID único, nombre, un listado de productos y el stock asociado a cada uno (el stock puede variar entre los distintos supermercados)
-    - Los supermercados comparten los distintos productos
+```
+domain/
+├── entity/
+│   ├── Product          # Producto con id, nombre y precio
+│   ├── Supermarket      # Aggregate root: maneja stock, ventas y horarios
+│   ├── Stock            # Cantidades por producto, protege stock negativo
+│   └── Sale             # Registro inmutable de una venta
+├── exception/
+│   ├── InsufficientStockException
+│   ├── ProductNotFoundException
+│   └── SupermarketNotFoundException
+└── valueobject/
+    ├── ProductId
+    ├── SupermarketId
+    ├── SaleId
+    ├── Quantity
+    ├── Amount
+    └── Schedule         # Horarios de apertura/cierre y días
 
-- Funcionalidades requeridas para cada _supermercado_:
-  - Registrar una venta de un producto
-    - Dado un ID de producto y una cantidad a vender, se debe registrar la venta de un producto
-    - La función debe retornar el precio total de la venta
-  - Obtener la cantidad vendida de un producto
-    - Dado un ID de producto, retornar la cantidad vendida de dicho producto
-  - Obtener ingresos por ventas de un producto
-    - Dado un ID de producto, retornar el dinero obtenido de las ventas de dicho producto
-  - Obtener ingresos totales
-    - Retornar el dinero total obtenido de todas las ventas realizadas
+repository/
+├── ProductRepository    # Interface
+├── SupermarketRepository
+└── impl/
+    ├── ProductRepositoryImpl      # In-memory
+    └── SupermarketRepositoryImpl
 
-- Funcionalidades requeridas para la _cadena de supermercados_:
-  - Obtener los 5 productos más vendidos
-    - Buscar los 5 productos más vendidos en toda la cadena  
-    - Retornar un _string_ con el formato `<nombre_producto>: cantidad_vendida`, concatenados con un guión
-  - Obtener ingresos totales
-    - Retornar el dinero total obtenido de todas las ventas realizadas en toda la cadena
-  - Obtener el supermercado con mayor cantidad de ingresos por ventas
-    - Retornar un _string_ con el formato `<nombre_supermercado> (<id>). Ingresos totales: <ingresos>`
- 
-Para cada una de las funcionalidades planteadas:
-- Definir los nombres de las funciones, parámetros y demás datos cómo consideres adecuado
-- Documentar y comentar el código dónde consideres necesario
-- Manejar todos los casos de error que consideres necesarios
-- Agregar todos los tests que consideres necesarios
+usecase/
+├── RegisterSaleUseCase           # Registrar venta
+├── GetSoldQuantityUseCase        # Cantidad vendida de un producto (toda la cadena)
+├── GetProductRevenueUseCase      # Ingresos de un producto en un supermercado
+├── GetTotalRevenueUseCase        # Ingresos totales de un supermercado
+├── GetTopSellingProductsUseCase  # Top 5 productos más vendidos (toda la cadena)
+├── GetChainTotalRevenueUseCase   # Ingresos totales de toda la cadena
+├── GetTopRevenueSupermarketUseCase # Supermercado con mayor ingresos
+└── GetOpenSupermarketsUseCase    # Supermercados abiertos en día/hora (bonus)
+```
 
-### Objetivo opcional
+---
 
-Se desea manejar para cada supermercado su hora de apertura y cierre, así cómo los días donde se encuentra abierto. Agregar los datos necesarios para manejar dicha información.
+## 🧩 Entidades
 
-Sobre la cadena de supermercados, agregar una funcionalidad que, dado un cierto día y horario, se pueda obtener la lista de supermercados abiertos en ese momento.
-Se espera obtener la respuesta como un _string_ con el formato `<nombre_supermercado> (<id>)`, y se concatenen con una coma.
+- **Product**: describe un producto (id, nombre, precio). No conoce stock ni ventas.
+- **Supermarket**: aggregate root. Maneja su stock, registra ventas, calcula ingresos.
+- **Stock**: cantidades por producto. Lanza `InsufficientStockException` si no hay stock.
+- **Sale**: hecho inmutable de una venta (producto, cantidad, monto, fecha).
 
+---
 
-## Pasos a seguir:
-1. Clone este repositorio en su máquina local usando Git.
-   ```bash
-   git clone https://gitlab.com/nexup/nexup-backend-challenge.git
-   ```
-2. Crea un repositorio vacío en tu cuenta de GitHub con el mismo nombre de este.
-   ```bash
-    nexup-backend-challenge
-   ```
-3. Muevesé a la carpeta del proyecto.
-   ```bash
-   cd ./nexup-backend-challenge
-   ```
-4. Cambia la URL remota del repositorio clonado de GitHub, por la URL de tu repositorio.
-   ```bash
-   git remote set-url origin <tu-repositorio.git>
-   ```
-5. Sube el código a tu repositorio.
+## 🔹 Value Objects
 
-## Recomendaciones
-- **No** hagas un _fork_ de este repositorio.
-- **No** hagas _push_ directamente a este repositorio.
-- Crea un commit por cada cambio que realices. Utiliza mensajes **claros** y **descriptivos** para documentar tu proceso.
-- No es necesario el uso de base de datos ni archivos para manejar los datos de prueba. Podes utilizar estructuras de datos en memoria.
-- Dentro del proyecto se encuentra un archivo de ejemplo para ejecución de las pruebas, modificarlo como sea necesario para adaptarlo al problema.
-  - En el archivo de pruebas se encuentra un ejemplo de datos a usar en la ejecución de los Tests
+Evité usar primitivos directamente (*Primitive Obsession*). Cada Value Object:
+- Constructor privado → solo se crea via `of()`, `new()`, `zero()`
+- Campo privado → acceso controlado por getters
+- Valida invariantes (ej: `Quantity >= 0`, `Amount >= 0`)
 
-## Entregables
-- Un enlace a un repositorio de GitHub con el código resolviendo el problema planteado.
-- Opcional: Un archivo README con explicaciones sobre el enfoque utilizado y cualquier otra información relevante.
+---
+
+## ⚠️ Excepciones
+
+- **InsufficientStockException**: no hay stock suficiente para la venta
+- **ProductNotFoundException**: el producto no existe
+- **SupermarketNotFoundException**: el supermercado no existe
+
+---
+
+## 🎯 Casos de Uso
+
+| UseCase | Entrada | Salida |
+|---------|---------|--------|
+| `RegisterSaleUseCase` | supermarketId, productId, quantity | Amount (total) |
+| `GetSoldQuantityUseCase` | productId | Quantity |
+| `GetProductRevenueUseCase` | supermarketId, productId | Amount |
+| `GetTotalRevenueUseCase` | supermarketId | Amount |
+| `GetTopSellingProductsUseCase` | - | String ("Producto: cantidad - ...") |
+| `GetChainTotalRevenueUseCase` | - | Amount |
+| `GetTopRevenueSupermarketUseCase` | - | String? ("Nombre (id). Ingresos: X") |
+| `GetOpenSupermarketsUseCase` | day, time | String ("Nombre (id), ...") |
+
+---
+
+## 🧪 Tests
+
+Cada UseCase tiene su archivo de tests con casos:
+- Flujo exitoso
+- Excepciones de dominio
+- Casos borde (sin ventas, sin supermercados, etc.)
+
+`TestData` centraliza los datos de prueba para mantener consistencia.
+
+---
+
+## 💡 Decisiones de Diseño
+
+### Enfoque: Dominio primero (Domain-driven-desing)
+
+Decidí armar el proyecto priorizando el **dominio de la aplicación** y principios de **Clean Code**:
+
+- **Naming descriptivo**: los nombres de variables, funciones y clases son lo más declarativos posible, especialmente cerca de las entidades. Por ejemplo: `soldQuantityOf()`, `revenueOf()`, `decreaseBy()`, `increaseBy()`.
+
+- **Value Objects en lugar de primitivos**: evité el *Primitive Obsession*. Un `ProductId` no es un `String`, un `Quantity` no es un `Int`. Esto hace el código más seguro y expresivo.
+
+- **Lógica en el dominio**: `Supermarket` contiene la lógica de negocio (registrar ventas, calcular ingresos). Los UseCases son coordinadores simples que buscan entidades, delegan al dominio, y persisten.
+
+- **UseCases para evitar god objects**: separé las operaciones en UseCases independientes en lugar de centralizar todo en una clase. Si `Supermarket` sumara más responsabilidades, debería modularizarse (ej: extraer `SalesManager`, `StockManager`).
+
+- **Excepciones de dominio**: en lugar de retornar `null` o códigos de error, el dominio lanza excepciones específicas que describen qué salió mal.
+
+- **Mínimos comentarios**: un código limpio debería ser descriptivo y legible sin necesidad de comentarios. Por eso casi no los usé. Solo dejé algunos mínimos en estructuras de iteración complejas (como `fold` o `groupBy`) donde el propósito no es inmediatamente obvio.
+
+### En una aplicación productiva...
+
+Este proyecto está **desacoplado de las capas de comunicación con el exterior**. No hay controllers, DTOs de request/response, ni frameworks web.
+
+En una app productiva, agregaría:
+- **Controllers** (Spring Boot, Ktor) que reciben requests HTTP
+- **DTOs** para mapear JSON ↔ Value Objects
+- **Repositorios** con persistencia real (JPA, MongoDB)
+- **Manejo de excepciones** global para traducir excepciones de dominio a respuestas HTTP
+
+Pero el **dominio y los UseCases permanecerían intactos**. Esa es la ventaja de esta arquitectura: el core del negocio no depende de la infraestructura.
+
+---
+
+## 📚 Referencias
+
+- [Primitive Obsession](https://refactoring.guru/es/smells/primitive-obsession)
+- [Replace Data Value with Object](https://refactoring.guru/es/replace-data-value-with-object)
+- [God Object - Wikipedia](https://en.wikipedia.org/wiki/God_object)

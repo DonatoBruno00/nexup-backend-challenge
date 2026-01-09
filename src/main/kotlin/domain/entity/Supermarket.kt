@@ -4,14 +4,18 @@ import domain.valueobject.Amount
 import domain.valueobject.ProductId
 import domain.valueobject.Quantity
 import domain.valueobject.SaleId
+import domain.valueobject.Schedule
 import domain.valueobject.SupermarketId
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalTime
 
 data class Supermarket(
     private val id: SupermarketId,
     private val name: String,
     private val stock: Stock,
-    private val sales: MutableList<Sale> = mutableListOf()
+    private val sales: MutableList<Sale> = mutableListOf(),
+    private val schedule: Schedule? = null
 ) {
 
     fun registerSale(
@@ -66,6 +70,7 @@ data class Supermarket(
         }
     }
 
+    // Agrupa ventas por producto y suma las cantidades vendidas de cada uno
     fun salesQuantitiesByProduct(): Map<ProductId, Quantity> {
         return sales
             .groupBy { sale -> sale.productId() }
@@ -74,5 +79,9 @@ data class Supermarket(
                     totalQuantity + sale.quantity() 
                 }
             }
+    }
+
+    fun isOpenAt(day: DayOfWeek, time: LocalTime): Boolean {
+        return schedule?.isOpenAt(day, time) ?: false
     }
 }
