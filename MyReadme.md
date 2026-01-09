@@ -35,7 +35,8 @@ repository
 
 usecase
 ├── RegisterSaleUseCase
-└── GetSoldQuantityUseCase
+├── GetSoldQuantityUseCase
+└── GetProductRevenueUseCase
 ```
 
 ### Tests
@@ -53,6 +54,14 @@ Agregué `GetSoldQuantityUseCase`: dado un `ProductId`, retorna la cantidad tota
 - Valida que el producto exista (lanza `ProductNotFoundException` si no)
 - Itera sobre todos los supermercados y suma las cantidades vendidas
 - Agregué `findAll()` al `SupermarketRepository`
+
+## Commit 4: Caso de Uso - Obtener Ingresos de Producto
+
+Agregué `GetProductRevenueUseCase`: dados un `SupermarketId` y `ProductId`, retorna los ingresos generados por ese producto en ese supermercado.
+
+- Valida que el supermercado exista
+- Valida que el producto exista
+- Delega a `supermarket.revenueOf(productId)`
 
 ## 📦 Estructura
 
