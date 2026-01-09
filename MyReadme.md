@@ -1,10 +1,49 @@
 ## Nexup Backend Challenge
 
-## 🎯 Sobre este commit
-
-Este primer commit define el **modelo de dominio**. Sin lógica de aplicación, sin persistencia. Solo las reglas del negocio bien protegidas.
-
 El `README.md` original lo dejé intacto. Este documento es para explicar mis decisiones de diseño.
+
+---
+
+## Commit 1: Modelo de Dominio
+
+Definí el modelo de dominio puro. Sin lógica de aplicación, sin persistencia. Solo las reglas del negocio bien protegidas.
+
+## Commit 2: Caso de Uso - Registrar Venta
+
+Agregué el primer caso de uso: `RegisterSaleUseCase`. 
+
+### ¿Por qué Use Cases?
+
+Elegí un enfoque orientado a casos de uso porque:
+
+- **Separación clara**: cada funcionalidad del negocio es un caso de uso independiente
+- **Testeable**: puedo probar cada operación de forma aislada con mocks simples
+- **Escalable**: agregar nuevas funcionalidades = agregar nuevos UseCases sin tocar los existentes
+- **El dominio se mantiene limpio**: las entidades no conocen repositorios ni infraestructura
+
+El UseCase actúa como coordinador: busca las entidades, delega la lógica al dominio (`Supermarket.registerSale()`), y persiste los cambios.
+
+### Estructura agregada
+
+```
+repository
+├── ProductRepository (interface)
+├── SupermarketRepository (interface)
+└── impl
+    ├── ProductRepositoryImpl (in-memory)
+    └── SupermarketRepositoryImpl (in-memory)
+
+usecase
+└── RegisterSaleUseCase
+```
+
+### Tests
+
+Creé `TestData` para centralizar los datos de prueba y mantener consistencia entre tests. Los tests cubren:
+- Venta exitosa
+- SupermarketNotFoundException
+- ProductNotFoundException  
+- InsufficientStockException
 
 ## 📦 Estructura
 
