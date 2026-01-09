@@ -1,8 +1,16 @@
+### Gradle ###
+.gradle/
+build/
+gradle/
+gradlew
+gradlew.bat
+*.jar
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -26,8 +34,11 @@ bin/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+### VS Code / Cursor ###
 .vscode/
 
 ### Mac OS ###
 .DS_Store
+
+### Kotlin ###
+*.class
