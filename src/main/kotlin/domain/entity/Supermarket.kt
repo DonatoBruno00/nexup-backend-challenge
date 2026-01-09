@@ -70,6 +70,7 @@ data class Supermarket(
         }
     }
 
+    // Agrupa ventas por producto y suma las cantidades vendidas de cada uno
     fun salesQuantitiesByProduct(): Map<ProductId, Quantity> {
         return sales
             .groupBy { sale -> sale.productId() }
