@@ -11,6 +11,9 @@ class SupermarketRepositoryImpl : SupermarketRepository {
     override fun findById(id: SupermarketId): Supermarket? = 
         supermarkets[id]
 
+    override fun findAll(): List<Supermarket> = 
+        supermarkets.values.toList()
+
     override fun save(supermarket: Supermarket) {
         supermarkets[supermarket.id()] = supermarket
     }

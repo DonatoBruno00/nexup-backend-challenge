@@ -34,7 +34,8 @@ repository
     └── SupermarketRepositoryImpl (in-memory)
 
 usecase
-└── RegisterSaleUseCase
+├── RegisterSaleUseCase
+└── GetSoldQuantityUseCase
 ```
 
 ### Tests
@@ -44,6 +45,14 @@ Creé `TestData` para centralizar los datos de prueba y mantener consistencia en
 - SupermarketNotFoundException
 - ProductNotFoundException  
 - InsufficientStockException
+
+## Commit 3: Caso de Uso - Obtener Cantidad Vendida
+
+Agregué `GetSoldQuantityUseCase`: dado un `ProductId`, retorna la cantidad total vendida de ese producto en todos los supermercados.
+
+- Valida que el producto exista (lanza `ProductNotFoundException` si no)
+- Itera sobre todos los supermercados y suma las cantidades vendidas
+- Agregué `findAll()` al `SupermarketRepository`
 
 ## 📦 Estructura
 
